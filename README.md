@@ -54,7 +54,7 @@ If you're using Rails, it can be useful to specify your globals in a `before_fil
       end
     end
 
-Now you can interpolate the `user_name` variable into every translation in your template:
+Now you can interpolate the `company` variable into every translation in your template:
 
     <%= t "greeting" %>
     <%= t "signature", president: "Bill Lumbergh" %>
