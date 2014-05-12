@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["hun.ati500@gmail.com"]
   spec.summary       = %q{Adds support for I18n global variables, which will be available for interpolation into every translation.}
   spec.description   = %q{Extends the Ruby I18n gem with global variables. The globals will be available for interpolation in every translation without explicitly specifying them in a call to I18n.translate. The variables can be accessed through I18n.config.globals.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/attilahorvath/i18n-globals"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
