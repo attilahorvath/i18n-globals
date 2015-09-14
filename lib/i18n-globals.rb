@@ -1,1 +1,1 @@
-require "i18n/globals"
+require 'i18n/globals'

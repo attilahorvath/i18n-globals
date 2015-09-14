@@ -1,4 +1,4 @@
-require "i18n/globals/version"
+require 'i18n/globals/version'
 
 module I18n
   class Config
@@ -20,6 +20,7 @@ module I18n
       end
       super(*args)
     end
+
     alias :t :translate
   end
 end
