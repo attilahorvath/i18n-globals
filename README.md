@@ -10,54 +10,72 @@ Extends the Ruby I18n gem with global variables. The globals will be available f
 
 Add this line to your application's Gemfile:
 
-    gem 'i18n-globals'
+```ruby
+gem 'i18n-globals'
+```
 
 And then execute:
 
-    $ bundle
+```sh
+$ bundle
+```
 
 Or install it yourself as:
 
-    $ gem install i18n-globals
+```sh
+$ gem install i18n-globals
+```
 
 ## Usage
 
 Add your global variables to the `I18n.config.globals` hash:
 
-    I18n.config.globals[:company] = "Initech"
+```ruby
+I18n.config.globals[:company] = 'Initech'
+```
 
 Your global variables will then be automatically interpolated into every translation:
 
-    # If the value of 'greeting' is 'Welcome to %{company}!'
-    I18n.t "greeting" # Returns 'Welcome to Initech!'
+```ruby
+# If the value of 'greeting' is 'Welcome to %{company}!'
+I18n.t 'greeting' # Returns 'Welcome to Initech!'
+```
 
 You can override the globals:
 
-    I18n.t "greeting", company: "Initrode" # Returns 'Welcome to Initrode!'
+```ruby
+I18n.t 'greeting', company: 'Initrode' # Returns 'Welcome to Initrode!'
+```
 
 It's also possible to mix globals and ordinary variables:
 
-    # If the value of 'signature' is '%{president}, President of %{company}'
-    I18n.t "signature", president: "Bill Lumbergh" # Returns 'Bill Lumbergh, President of Initech'
+```ruby
+# If the value of 'signature' is '%{president}, President of %{company}'
+I18n.t 'signature', president: 'Bill Lumbergh' # Returns 'Bill Lumbergh, President of Initech'
+```
 
-If you're using Rails, it can be useful to specify your globals in a `before_filter`:
+If you're using Rails, it can be useful to specify your globals in a `before_action`:
 
-    class EmployeesController < ApplicationController
-      before_filter :set_i18n_globals
+```ruby
+class EmployeesController < ApplicationController
+  before_action :set_i18n_globals
 
-      # ...
+  # ...
 
-      private
+  private
 
-      def set_i18n_globals
-        I18n.config.globals[:company] = Company.current.name
-      end
-    end
+  def set_i18n_globals
+    I18n.config.globals[:company] = Company.current.name
+  end
+end
+```
 
 Now you can interpolate the `company` variable into every translation in your template:
 
-    <%= t "greeting" %>
-    <%= t "signature", president: "Bill Lumbergh" %>
+```html_ruby
+<%= t 'greeting' %>
+<%= t 'signature', president: 'Bill Lumbergh' %>
+```
 
 ## Contributing
 
