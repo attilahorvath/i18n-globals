@@ -1,4 +1,4 @@
-# I18n::Globals
+# I18n::Globals [![Build Status](https://travis-ci.org/attilahorvath/i18n-globals.svg?branch=master)](https://travis-ci.org/attilahorvath/i18n-globals)
 
 Adds support for I18n global variables, which will be available for interpolation into every translation.
 
@@ -37,7 +37,7 @@ I18n.config.globals[:company] = 'Initech'
 Your global variables will then be automatically interpolated into every translation:
 
 ```ruby
-# If the value of 'greeting' is 'Welcome to %{company}!'
+# The translation of 'greeting' is 'Welcome to %{company}!'
 I18n.t 'greeting' # => 'Welcome to Initech!'
 ```
 
@@ -47,7 +47,7 @@ You can override the globals:
 I18n.t 'greeting', company: 'Initrode' # => 'Welcome to Initrode!'
 ```
 
-It's also possible to mix globals and ordinary variables:
+It is also possible to mix globals and ordinary variables:
 
 ```ruby
 # The translation of 'signature' is '%{president}, President of %{company}'
