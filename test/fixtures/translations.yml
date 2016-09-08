@@ -1,0 +1,4 @@
+en:
+  test: Hello World!
+  greeting: Hi there, %{name}!
+  welcome: 'Hello %{name}, welcome to %{company}!'
