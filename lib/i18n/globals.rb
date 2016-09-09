@@ -12,9 +12,9 @@ module I18n
 
       def for_locale(locale)
         if key?(locale)
-          globals_cache[locale] ||= merge(fetch(locale)).reject { |_, i| i.is_a?(Hash) }
+          globals_cache[locale] ||= merge(fetch(locale)).select { |_, i| !i.is_a?(Hash) }
         else
-          globals_cache[:default] ||= reject { |_, i| i.is_a?(Hash) }
+          globals_cache[:default] ||= select { |_, i| !i.is_a?(Hash) }
         end
       end
 
