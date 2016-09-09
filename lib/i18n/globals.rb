@@ -8,7 +8,7 @@ module I18n
     class CachedGlobals < Hash
       def []=(key, val)
         clear_cache
-        annotate_hash(val) if val.is_a?(Hash) # see annotate hash below why whis must be done
+        annotate_hash(val) if val.is_a?(Hash)
         super(key, val)
       end
 
@@ -27,7 +27,6 @@ module I18n
 
       def merge!(val)
         clear_cache
-        # see annotate hash below why whis must be done
         val.select { |_, v| v.is_a?(Hash) }.each { |_, v| annotate_hash(v) }
         super(val)
       end
@@ -53,6 +52,8 @@ module I18n
       # To overcome this we annotate every hash that might passed in with this
       # method. So when the sub hash is changed like above, the whole cache
       # is cleared like it should.
+
+      # rubocop:disable Metrics/MethodLength
       def annotate_hash(hash)
         return if hash.instance_variable_defined?(:@cached_global)
         hash.instance_variable_set(:@cached_global, self)
@@ -72,19 +73,21 @@ module I18n
           @cached_global.send(:clear_cache)
         end
       end
+      # rubocop:enable Metrics/MethodLength
     end
 
     def globals
-      @@globals ||= CachedGlobals.new
+      @@globals ||= CachedGlobals.new # rubocop:disable Style/ClassVars
     end
 
     def globals=(new_globals)
-      globals.clear.merge!(new_globals) # maybe there is something better than `clear` and `merge!`
+      globals.clear.merge!(new_globals)
     end
 
     prepend(
       Module.new do
         def missing_interpolation_argument_handler
+          # rubocop:disable Style/ClassVars
           @@missing_interpolation_argument_handler_with_globals ||=
             lambda do |missing_key, provided_hash, string|
               # Since the key was not found in a interpolation variable, check
@@ -96,6 +99,7 @@ module I18n
                 super.call(missing_key, provided_hash, string)
               end
             end
+          # rubocop:enable Style/ClassVars
         end
       end
     )
@@ -111,6 +115,6 @@ module I18n
       super(*args)
     end
 
-    alias :t :translate
+    alias t translate
   end
 end
