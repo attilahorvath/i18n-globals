@@ -82,23 +82,23 @@ module I18n
       globals.clear.merge!(new_globals) # maybe there is something better than `clear` and `merge!`
     end
 
-    # Overrides original I18n::Config#missing_interpolation_argument_handler
-    def missing_interpolation_argument_handler
-      @@missing_interpolation_argument_handler ||= lambda do |missing_key, provided_hash, string|
-        raise MissingInterpolationArgument.new(missing_key, provided_hash, string)
-      end
-
-      @@missing_interpolation_argument_handler_with_globals ||= lambda do |missing_key, provided_hash, string|
-        # Since the key was not found in a interpolation variable, check
-        # whether it is a global. If it is, return it, so interpolation is
-        # successfull.
-        if globals.for_locale(locale).key?(missing_key)
-          globals.for_locale(locale)[missing_key]
-        else
-          @@missing_interpolation_argument_handler.call(missing_key, provided_hash, string)
+    prepend(
+      Module.new do
+        def missing_interpolation_argument_handler
+          @@missing_interpolation_argument_handler_with_globals ||=
+            lambda do |missing_key, provided_hash, string|
+              # Since the key was not found in a interpolation variable, check
+              # whether it is a global. If it is, return it, so interpolation is
+              # successfull.
+              if globals.for_locale(locale).key?(missing_key)
+                globals.for_locale(locale)[missing_key]
+              else
+                super.call(missing_key, provided_hash, string)
+              end
+            end
         end
       end
-    end
+    )
   end
 
   class << self
