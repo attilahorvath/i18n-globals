@@ -209,8 +209,8 @@ class TestI18nGlobals < Minitest::Test
 
     # It looks like I18n.translate by default allocates 2 new hashes
     # per call. So substract it from the count.
-    expected_count = count_after - times * 2
+    created_due_to_globals = count_after - count_before - times * 2
 
-    assert_operator count_before, :==, expected_count
+    assert_equal created_due_to_globals, 0
   end
 end
