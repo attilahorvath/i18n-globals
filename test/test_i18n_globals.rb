@@ -168,4 +168,49 @@ class TestI18nGlobals < Minitest::Test
 
     assert_equal 'Hi there, Dobby!', I18n.translate('greeting')
   end
+
+  def test_it_still_fails_on_missing_interpolation
+    assert_raises(I18n::MissingInterpolationArgument) { I18n.translate('greeting') }
+  end
+
+  def test_it_allows_to_set_a_custom_missing_interpolation_argument_handler
+    I18n.config.missing_interpolation_argument_handler = proc { raise 'works!' }
+
+    assert_raises('works!') { I18n.translate('greeting') }
+
+    I18n.config.missing_interpolation_argument_handler = nil
+  end
+
+  def test_it_translates_globals_with_custom_missing_interpolation_argument_handler
+    I18n.config.missing_interpolation_argument_handler = proc { raise 'works!' }
+
+    I18n.config.globals = {
+      name: 'Greg'
+    }
+
+    assert_equal I18n.translate('greeting'), 'Hi there, Greg!'
+
+    I18n.config.missing_interpolation_argument_handler = nil
+  end
+
+  def test_it_does_not_polute_the_object_space_with_hashes
+    I18n.config.globals = {
+      name: 'Greg'
+    }
+
+    values = { name: 'Dobby' }
+    times = 10_000
+
+    GC.disable
+    count_before = ObjectSpace.each_object(Hash).count
+    times.times { I18n.translate('greeting', values) }
+    count_after = ObjectSpace.each_object(Hash).count
+    GC.enable
+
+    # It looks like I18n.translate by default allocates 2 new hashes
+    # per call. So substract it from the count.
+    expected_count = count_after - times * 2
+
+    assert_operator count_before, :==, expected_count
+  end
 end

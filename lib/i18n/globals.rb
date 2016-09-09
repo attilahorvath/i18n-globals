@@ -2,6 +2,8 @@ require 'i18n'
 require 'i18n/globals/version'
 
 module I18n
+  FAKE_INTERPOLATION_HASH = { fake_: :_interpolation }.freeze
+
   class Config
     class CachedGlobals < Hash
       def []=(key, val)
@@ -79,15 +81,33 @@ module I18n
     def globals=(new_globals)
       globals.clear.merge!(new_globals) # maybe there is something better than `clear` and `merge!`
     end
+
+    # Overrides original I18n::Config#missing_interpolation_argument_handler
+    def missing_interpolation_argument_handler
+      @@missing_interpolation_argument_handler ||= lambda do |missing_key, provided_hash, string|
+        raise MissingInterpolationArgument.new(missing_key, provided_hash, string)
+      end
+
+      @@missing_interpolation_argument_handler_with_globals ||= lambda do |missing_key, provided_hash, string|
+        # Since the key was not found in a interpolation variable, check
+        # whether it is a global. If it is, return it, so interpolation is
+        # successfull.
+        if globals.for_locale(locale).key?(missing_key)
+          globals.for_locale(locale)[missing_key]
+        else
+          @@missing_interpolation_argument_handler.call(missing_key, provided_hash, string)
+        end
+      end
+    end
   end
 
   class << self
     def translate(*args)
-      if args.last.is_a?(Hash)
-        args[-1] = config.globals.for_locale(locale).merge(args.last)
-      else
-        args << config.globals.for_locale(locale)
-      end
+      # If last argument is a hash, interpolation will be run. If not, it will
+      # not even attempt to interpolate something and our custom
+      # `missing_interpolation_argument_handler` will not be run at all. Thats
+      # why we pass in a fake hash so that it always runs interpolation.
+      args << FAKE_INTERPOLATION_HASH unless args.last.is_a?(Hash)
       super(*args)
     end
 
