@@ -1,0 +1,10 @@
+AllCops:
+  TargetRubyVersion: 2.0
+  Exclude:
+    - 'i18n-globals.gemspec'
+
+Documentation:
+  Enabled: false
+
+Metrics/LineLength:
+  Max: 100

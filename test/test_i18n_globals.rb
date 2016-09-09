@@ -2,6 +2,7 @@ require 'minitest/autorun'
 require 'minitest/pride'
 require 'i18n-globals'
 
+# rubocop:disable Metrics/ClassLength
 class TestI18nGlobals < Minitest::Test
   def setup
     I18n.backend.load_translations 'test/fixtures/translations.yml'
@@ -46,14 +47,16 @@ class TestI18nGlobals < Minitest::Test
     I18n.config.globals[:name] = 'Barney'
     I18n.config.globals[:company] = 'Black Mesa'
 
-    assert_equal 'Hello Barney, welcome to Aperture Science!', I18n.translate('welcome', company: 'Aperture Science')
+    assert_equal 'Hello Barney, welcome to Aperture Science!',
+                 I18n.translate('welcome', company: 'Aperture Science')
   end
 
   def test_that_all_of_the_global_variables_can_be_overwritten
     I18n.config.globals[:name] = 'Barney'
     I18n.config.globals[:company] = 'Black Mesa'
 
-    assert_equal 'Hello Gordon, welcome to Aperture Science!', I18n.translate('welcome', name: 'Gordon', company: 'Aperture Science')
+    assert_equal 'Hello Gordon, welcome to Aperture Science!',
+                 I18n.translate('welcome', name: 'Gordon', company: 'Aperture Science')
   end
 
   def test_that_the_t_alias_work
@@ -125,7 +128,7 @@ class TestI18nGlobals < Minitest::Test
 
     assert_equal 'Hi there, Debby!', I18n.translate('greeting')
 
-    I18n.config.globals[:en].merge!(name: 'Elisa')
+    I18n.config.globals[:en].merge!(name: 'Elisa') # rubocop:disable Performance/RedundantMerge
 
     assert_equal 'Hi there, Elisa!', I18n.translate('greeting')
   end
@@ -144,9 +147,7 @@ class TestI18nGlobals < Minitest::Test
   end
 
   def test_that_cache_is_cleared_after_setting_a_new_global
-    I18n.config.globals = {
-      name: 'Greg'
-    }
+    I18n.config.globals[:name] = 'Greg'
 
     assert_equal 'Hi there, Greg!', I18n.translate('greeting')
 
@@ -156,13 +157,11 @@ class TestI18nGlobals < Minitest::Test
   end
 
   def test_that_cache_is_cleared_after_merging_a_new_global
-    I18n.config.globals = {
-      name: 'Greg'
-    }
+    I18n.config.globals[:name] = 'Greg'
 
     assert_equal 'Hi there, Greg!', I18n.translate('greeting')
 
-    I18n.config.globals.merge!(name: 'Dobby')
+    I18n.config.globals.merge!(name: 'Dobby') # rubocop:disable Performance/RedundantMerge
 
     assert_equal 'Hi there, Dobby!', I18n.translate('greeting')
   end
@@ -182,15 +181,14 @@ class TestI18nGlobals < Minitest::Test
   def test_that_it_translates_globals_with_custom_missing_interpolation_argument_handler
     I18n.config.missing_interpolation_argument_handler = -> { raise 'works!' }
 
-    I18n.config.globals = {
-      name: 'Greg'
-    }
+    I18n.config.globals[:name] = 'Greg'
 
     assert_equal 'Hi there, Greg!', I18n.translate('greeting')
 
     I18n.config.missing_interpolation_argument_handler = nil
   end
 
+  # rubocop:disable Metrics/MethodLength
   def test_that_it_does_not_polute_the_object_space_with_hashes
     I18n.config.globals = {
       name: 'Greg'
@@ -211,4 +209,6 @@ class TestI18nGlobals < Minitest::Test
 
     assert_equal 0, created_due_to_globals
   end
+  # rubocop:enable Metrics/MethodLength
 end
+# rubocop:enable Metrics/ClassLength
