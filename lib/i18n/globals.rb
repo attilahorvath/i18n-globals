@@ -81,8 +81,7 @@ module I18n
               # Since the key was not found in a interpolation variable, check
               # whether it is a global. If it is, return it, so interpolation is
               # successfull.
-              global_value = global(missing_key)
-              global_value ? global_value : super.call(missing_key, provided_hash, string)
+              global(missing_key) || super.call(missing_key, provided_hash, string)
             end
           # rubocop:enable Style/ClassVars
         end
