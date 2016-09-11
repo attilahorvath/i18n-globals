@@ -37,11 +37,6 @@ module I18n
         @locale_hashes[locale] && @locale_hashes[locale][key] || @defaults[key]
       end
 
-      # Checks whether we have that global in current locale or in defaults
-      def for_locale?(key, locale)
-        @locale_hashes[locale] && @locale_hashes[locale].key?(key) || @defaults.key?(key)
-      end
-
       # Returns all globals for current locale. Since this is a combination
       # of default and locale globals, the hash is frozen so that it is not
       # manipulated by accident (that would have no effect on globals).
