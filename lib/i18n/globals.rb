@@ -86,11 +86,17 @@ module I18n
 
   class << self
     def translate(*args)
-      # If last argument is a hash, interpolation will be run. If not, it will
-      # not even attempt to interpolate something and our custom
-      # `missing_interpolation_argument_handler` will not be run at all. That's
-      # why we pass in a fake hash so that it always runs interpolation.
-      args << FAKE_INTERPOLATION_HASH unless args.last.is_a?(Hash)
+      # If last argument is not a Hash, interpolation will not be run and our
+      # `missing_interpolation_argument_handler` will not be called at all. That's
+      # why we pass in a fake Hash in that case so that it always runs interpolation.
+      if !args.last.is_a?(Hash)
+        args << FAKE_INTERPOLATION_HASH
+
+      # But even when it is Hash, it must not be empty to start the interpolation.
+      elsif args.last.size.zero?
+        args.last.merge! FAKE_INTERPOLATION_HASH
+      end
+
       super(*args)
     end
 

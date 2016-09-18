@@ -74,6 +74,13 @@ class TestI18nGlobals < Minitest::Test
     assert_equal 'Hi there, Greg!', I18n.translate('greeting')
   end
 
+  def test_that_it_also_translates_when_empty_hash_is_pased_as_an_argument
+    I18n.config.globals[:name] = 'Chell'
+    I18n.config.globals[:company] = 'Aperture Science'
+
+    assert_equal 'Hello Chell, welcome to Aperture Science!', I18n.t('welcome', {})
+  end
+
   def test_that_locale_dependent_variable_overrides_default_one
     I18n.config.globals = {
       name: 'Greg',
