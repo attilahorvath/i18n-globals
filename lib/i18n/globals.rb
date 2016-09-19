@@ -65,7 +65,7 @@ module I18n
     end
 
     def global(key, loc = locale)
-      globals.send(:for_locale, key, loc)
+      globals.send(:for_locale, key.to_sym, loc)
     end
 
     prepend(

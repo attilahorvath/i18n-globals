@@ -254,4 +254,16 @@ class TestI18nGlobals < Minitest::Test
 
     assert_equal 'Greg', I18n.config.global(:name, :de)
   end
+
+  def test_that_global_works_with_symbols
+    I18n.config.globals = { name: 'Greg' }
+
+    assert_equal 'Greg', I18n.config.global(:name)
+  end
+
+  def test_that_global_works_with_strings
+    I18n.config.globals = { name: 'Greg' }
+
+    assert_equal 'Greg', I18n.config.global('name')
+  end
 end
