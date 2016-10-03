@@ -92,9 +92,10 @@ module I18n
       if !args.last.is_a?(Hash)
         args << FAKE_INTERPOLATION_HASH
 
-      # But even when it is Hash, it must not be empty to start the interpolation.
-      elsif args.last.size.zero?
-        args.last.merge! FAKE_INTERPOLATION_HASH
+      # But even when it is Hash, it must not be empty and contain other keys
+      # than reserverd ones to start the interpolation.
+      elsif (args.last.keys - I18n::RESERVED_KEYS).empty?
+        args.last[:fake_] = :_interpolation
       end
 
       super(*args)
