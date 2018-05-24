@@ -2,8 +2,7 @@ require 'minitest/autorun'
 require 'minitest/pride'
 require 'i18n-globals'
 
-# rubocop:disable Metrics/ClassLength
-class TestI18nGlobals < Minitest::Test
+class TestI18nGlobals < Minitest::Test # rubocop:disable Metrics/ClassLength
   def setup
     I18n.backend.load_translations 'test/fixtures/translations.yml'
     I18n.config.globals = {}
@@ -182,7 +181,9 @@ class TestI18nGlobals < Minitest::Test
   end
 
   def test_that_it_still_fails_on_missing_interpolation
-    assert_raises(I18n::MissingInterpolationArgument) { I18n.translate('greeting', some: 'interpolation') }
+    assert_raises(I18n::MissingInterpolationArgument) do
+      I18n.translate('greeting', some: 'interpolation')
+    end
   end
 
   def test_that_it_does_not_fail_if_no_interpolation_is_provided
@@ -230,6 +231,7 @@ class TestI18nGlobals < Minitest::Test
 
     assert_equal 0, created_due_to_globals
   end
+  # rubocop:enable Metrics/MethodLength,Metrics/AbcSize
 
   def test_that_globals_returns_a_frozen_hash_if_locale_is_present
     I18n.config.globals = {

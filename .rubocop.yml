@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.0
+  TargetRubyVersion: 2.1
   Exclude:
     - 'i18n-globals.gemspec'
 
@@ -8,3 +8,6 @@ Documentation:
 
 Metrics/LineLength:
   Max: 100
+
+Style/FormatStringToken:
+  Enabled: false
