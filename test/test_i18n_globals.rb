@@ -182,13 +182,17 @@ class TestI18nGlobals < Minitest::Test
   end
 
   def test_that_it_still_fails_on_missing_interpolation
-    assert_raises(I18n::MissingInterpolationArgument) { I18n.translate('greeting') }
+    assert_raises(I18n::MissingInterpolationArgument) { I18n.translate('greeting', some: 'interpolation') }
+  end
+
+  def test_that_it_does_not_fail_if_no_interpolation_is_provided
+    assert_equal 'Hi there, %{name}!', I18n.translate('greeting')
   end
 
   def test_that_it_allows_to_set_a_custom_missing_interpolation_argument_handler
     I18n.config.missing_interpolation_argument_handler = -> { raise 'works!' }
 
-    assert_raises('works!') { I18n.translate('greeting') }
+    assert_raises('works!') { I18n.translate('greeting', some: 'interpolation') }
 
     I18n.config.missing_interpolation_argument_handler = nil
   end

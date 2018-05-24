@@ -76,7 +76,12 @@ module I18n
               # Since the key was not found in a interpolation variable, check
               # whether it is a global. If it is, return it, so interpolation is
               # successfull.
-              global(missing_key) || super.call(missing_key, provided_hash, string)
+              value = global(missing_key)
+              next value if value
+
+              next "%{#{missing_key}}" if provided_hash == FAKE_INTERPOLATION_HASH
+
+              super.call(missing_key, provided_hash, string)
             end
           # rubocop:enable Style/ClassVars
         end
