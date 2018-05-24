@@ -2,8 +2,7 @@ require 'minitest/autorun'
 require 'minitest/pride'
 require 'i18n-globals'
 
-# rubocop:disable Metrics/ClassLength
-class TestI18nGlobals < Minitest::Test
+class TestI18nGlobals < Minitest::Test # rubocop:disable Metrics/ClassLength
   def setup
     I18n.backend.load_translations 'test/fixtures/translations.yml'
     I18n.config.globals = {}
@@ -72,6 +71,21 @@ class TestI18nGlobals < Minitest::Test
     I18n.config = I18n::Config.new
 
     assert_equal 'Hi there, Greg!', I18n.translate('greeting')
+  end
+
+  def test_that_it_also_translates_when_empty_hash_is_pased_as_an_argument
+    I18n.config.globals[:name] = 'Chell'
+    I18n.config.globals[:company] = 'Aperture Science'
+
+    assert_equal 'Hello Chell, welcome to Aperture Science!', I18n.t('welcome', {})
+  end
+
+  def test_that_it_also_translates_when_hash_is_passed_with_reserverd_keys_as_an_argument
+    I18n.config.globals[:name] = 'Chell'
+    I18n.config.globals[:company] = 'Aperture Science'
+
+    assert_equal 'Hello Chell, welcome to Aperture Science!',
+                 I18n.t('welcome', raise: true)
   end
 
   def test_that_locale_dependent_variable_overrides_default_one
@@ -167,13 +181,19 @@ class TestI18nGlobals < Minitest::Test
   end
 
   def test_that_it_still_fails_on_missing_interpolation
-    assert_raises(I18n::MissingInterpolationArgument) { I18n.translate('greeting') }
+    assert_raises(I18n::MissingInterpolationArgument) do
+      I18n.translate('greeting', some: 'interpolation')
+    end
+  end
+
+  def test_that_it_does_not_fail_if_no_interpolation_is_provided
+    assert_equal 'Hi there, %{name}!', I18n.translate('greeting')
   end
 
   def test_that_it_allows_to_set_a_custom_missing_interpolation_argument_handler
     I18n.config.missing_interpolation_argument_handler = -> { raise 'works!' }
 
-    assert_raises('works!') { I18n.translate('greeting') }
+    assert_raises('works!') { I18n.translate('greeting', some: 'interpolation') }
 
     I18n.config.missing_interpolation_argument_handler = nil
   end
@@ -188,14 +208,16 @@ class TestI18nGlobals < Minitest::Test
     I18n.config.missing_interpolation_argument_handler = nil
   end
 
-  # rubocop:disable Metrics/MethodLength
-  def test_that_it_does_not_polute_the_object_space_with_hashes
+  # rubocop:disable Metrics/MethodLength,Metrics/AbcSize
+  def test_that_it_does_not_pollute_the_object_space_with_hashes
     I18n.config.globals = {
       name: 'Greg'
     }
 
     values = { name: 'Dobby' }
     times = 10_000
+
+    I18n.translate('greeting', values) # run it once to "warm up"
 
     GC.disable
     count_before = ObjectSpace.each_object(Hash).count
@@ -209,6 +231,53 @@ class TestI18nGlobals < Minitest::Test
 
     assert_equal 0, created_due_to_globals
   end
-  # rubocop:enable Metrics/MethodLength
+  # rubocop:enable Metrics/MethodLength,Metrics/AbcSize
+
+  def test_that_globals_returns_a_frozen_hash_if_locale_is_present
+    I18n.config.globals = {
+      name: 'Greg',
+      en: { name: 'Debby' }
+    }
+
+    assert_equal true, I18n.config.globals(:en).frozen?
+  end
+
+  def test_that_globals_returns_default_values_for_locale_too
+    I18n.config.globals = {
+      name: 'Greg',
+      de: { hello: 'Hallo' }
+    }
+
+    assert_equal({ name: 'Greg', hello: 'Hallo' }, I18n.config.globals(:de))
+  end
+
+  def test_that_global_returns_locale_value
+    I18n.config.globals = {
+      name: 'Greg',
+      en: { name: 'Debby' }
+    }
+
+    assert_equal 'Debby', I18n.config.global(:name, :en)
+  end
+
+  def test_that_global_returns_default_values_too
+    I18n.config.globals = {
+      name: 'Greg',
+      de: { hello: 'Hallo' }
+    }
+
+    assert_equal 'Greg', I18n.config.global(:name, :de)
+  end
+
+  def test_that_global_works_with_symbols
+    I18n.config.globals = { name: 'Greg' }
+
+    assert_equal 'Greg', I18n.config.global(:name)
+  end
+
+  def test_that_global_works_with_strings
+    I18n.config.globals = { name: 'Greg' }
+
+    assert_equal 'Greg', I18n.config.global('name')
+  end
 end
-# rubocop:enable Metrics/ClassLength

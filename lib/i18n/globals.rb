@@ -5,99 +5,83 @@ module I18n
   FAKE_INTERPOLATION_HASH = { fake_: :_interpolation }.freeze
 
   class Config
-    class CachedGlobals < Hash
+    class CachedGlobals
+      @locale_hashes = {}
+      @defaults = {}
+
+      def initialize(hash = nil)
+        return unless hash
+
+        @locale_hashes, @defaults = hash.partition { |_, v| v.is_a?(Hash) }.map(&:to_h)
+      end
+
       def []=(key, val)
-        clear_cache
-        annotate_hash(val) if val.is_a?(Hash)
-        super(key, val)
+        val.is_a?(Hash) ? @locale_hashes[key] = val : @defaults[key] = val
       end
 
-      def for_locale(locale)
-        if key?(locale)
-          globals_cache[locale] ||= merge(fetch(locale)).select { |_, i| !i.is_a?(Hash) }
-        else
-          globals_cache[:default] ||= select { |_, i| !i.is_a?(Hash) }
-        end
-      end
-
-      def clear
-        clear_cache
-        super
+      def [](key)
+        @locale_hashes[key] || @defaults[key]
       end
 
       def merge!(val)
-        clear_cache
-        val.select { |_, v| v.is_a?(Hash) }.each { |_, v| annotate_hash(v) }
-        super(val)
+        locale_hashes, defaults = val.partition { |_, v| v.is_a?(Hash) }.map(&:to_h)
+        @locale_hashes.merge!(locale_hashes)
+        @defaults.merge!(defaults)
+        self
       end
 
       private
 
-      def globals_cache
-        @globals_cache ||= {}
+      # Returns the value of the global for that locale or the default as fallback
+      def for_locale(key, locale)
+        @locale_hashes[locale] && @locale_hashes[locale][key] || @defaults[key]
       end
 
-      def clear_cache
-        @globals_cache = {}
+      # Returns all globals for current locale. Since this is a combination
+      # of default and locale globals, the hash is frozen so that it is not
+      # manipulated by accident (that would have no effect on globals).
+      #
+      # To change locale dependent hashes during runtime, use `:[]` to fetch
+      # locale globals without defaults:
+      #
+      #     I18n.config.globals[:en][:new_name] = 'James'
+      #
+      def all_for_locale(locale)
+        (
+          @locale_hashes[locale] && @defaults.merge(@locale_hashes[locale]) ||
+            @defaults.dup
+        ).freeze
       end
-
-      # This is a little bit cumbersome. It might happen that this is done:
-      #
-      #     I18n.config.globals[:en][:welcome] = 'Hello'
-      #
-      # What this does is changing the locale dependent version of `welcome`.
-      # Unfortunately we only override `:[]=` for our globals hash so it
-      # does not detect that the globals have been changed.
-      #
-      # To overcome this we annotate every hash that might passed in with this
-      # method. So when the sub hash is changed like above, the whole cache
-      # is cleared like it should.
-
-      # rubocop:disable Metrics/MethodLength
-      def annotate_hash(hash)
-        return if hash.instance_variable_defined?(:@cached_global)
-        hash.instance_variable_set(:@cached_global, self)
-
-        def hash.[]=(key, value)
-          super(key, value)
-          @cached_global.send(:clear_cache)
-        end
-
-        def hash.merge!(other_hash)
-          super(other_hash)
-          @cached_global.send(:clear_cache)
-        end
-
-        def hash.clear
-          super
-          @cached_global.send(:clear_cache)
-        end
-      end
-      # rubocop:enable Metrics/MethodLength
     end
 
-    def globals
+    def globals(locale = nil)
       @@globals ||= CachedGlobals.new # rubocop:disable Style/ClassVars
+      locale.nil? && @@globals || @@globals.send(:all_for_locale, locale)
     end
 
-    def globals=(new_globals)
-      globals.clear.merge!(new_globals)
+    # rubocop:disable Style/ClassVars
+    def globals=(new_globals, locale = nil)
+      locale.nil? ? @@globals = CachedGlobals.new(new_globals) : globals[locale] = new_globals
+    end
+
+    def global(key, loc = locale)
+      globals.send(:for_locale, key.to_sym, loc)
     end
 
     prepend(
       Module.new do
         def missing_interpolation_argument_handler
-          # rubocop:disable Style/ClassVars
           @@missing_interpolation_argument_handler_with_globals ||=
             lambda do |missing_key, provided_hash, string|
               # Since the key was not found in a interpolation variable, check
               # whether it is a global. If it is, return it, so interpolation is
               # successfull.
-              if globals.for_locale(locale).key?(missing_key)
-                globals.for_locale(locale)[missing_key]
-              else
-                super.call(missing_key, provided_hash, string)
-              end
+              value = global(missing_key)
+              next value if value
+
+              next "%{#{missing_key}}" if provided_hash == FAKE_INTERPOLATION_HASH
+
+              super.call(missing_key, provided_hash, string)
             end
           # rubocop:enable Style/ClassVars
         end
@@ -107,11 +91,18 @@ module I18n
 
   class << self
     def translate(*args)
-      # If last argument is a hash, interpolation will be run. If not, it will
-      # not even attempt to interpolate something and our custom
-      # `missing_interpolation_argument_handler` will not be run at all. That's
-      # why we pass in a fake hash so that it always runs interpolation.
-      args << FAKE_INTERPOLATION_HASH unless args.last.is_a?(Hash)
+      # If last argument is not a Hash, interpolation will not be run and our
+      # `missing_interpolation_argument_handler` will not be called at all. That's
+      # why we pass in a fake Hash in that case so that it always runs interpolation.
+      if !args.last.is_a?(Hash)
+        args << FAKE_INTERPOLATION_HASH
+
+      # But even when it is Hash, it must not be empty and contain other keys
+      # than reserverd ones to start the interpolation.
+      elsif (args.last.keys - I18n::RESERVED_KEYS).empty?
+        args.last[:fake_] = :_interpolation
+      end
+
       super(*args)
     end
 

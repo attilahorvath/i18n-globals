@@ -1,4 +1,4 @@
-# I18n::Globals [![Build Status](https://travis-ci.org/attilahorvath/i18n-globals.svg?branch=master)](https://travis-ci.org/attilahorvath/i18n-globals)
+# I18n::Globals [![Build Status](https://travis-ci.org/doits/i18n-globals.svg?branch=locale_dependend_v2)](https://travis-ci.org/doits/i18n-globals)
 
 Adds support for I18n global variables, which will be available for interpolation into every translation.
 
